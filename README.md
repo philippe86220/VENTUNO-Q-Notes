@@ -135,8 +135,9 @@ Sur la VENTUNO Q, Firefox présentait une certaine lenteur. Lancé depuis
 un terminal, il affichait également plusieurs erreurs Mesa liées au GPU
 Adreno 623.
 
-L'objectif du diagnostic était de déterminer si le problème provenait
-: - du processeur ou de la mémoire ; 
+L'objectif du diagnostic était de déterminer si le problème provenait : 
+
+- du processeur ou de la mémoire ; 
 - du stockage eMMC ;
 - du pilote graphique du système ;
 - des permissions d'accès au GPU ;
