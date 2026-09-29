@@ -692,5 +692,88 @@ mesa-2404 corrigé : 25.2.8-snap288 (revision 1836)
 
 ------------------------------------------------------------------------
 
+## Langue française et paramètres régionaux
+
+L'image Ubuntu fournie avec la VENTUNO Q peut ne contenir par défaut que les locales anglaises.  
+Vous pouvez vérifier les locales actuellement disponibles avec :
+
+```bash
+locale
+locale -a
+```
+
+### Installer la langue française
+
+Mettez à jour la liste des paquets et installez les paquets de langue française :
+
+```bash
+sudo apt update
+sudo apt install language-pack-fr language-pack-gnome-fr
+```
+
+Générez la locale française :
+
+```bash
+sudo locale-gen fr_FR.UTF-8
+```
+
+Vérifiez qu'elle est disponible :
+
+```bash
+locale -a | grep -i fr
+```
+
+Le résultat doit notamment contenir :
+
+```text
+fr_FR.utf8
+```
+
+Vous pouvez ensuite ouvrir :
+
+**Paramètres → Système → Région et langue**
+
+et sélectionner :
+
+- **Langue :** Français
+- **Formats :** France
+
+Déconnectez-vous puis reconnectez-vous si la nouvelle langue ou les formats régionaux ne sont pas immédiatement disponibles.
+
+Lors de la première connexion en français, GNOME peut demander si les dossiers standards de l'utilisateur doivent être renommés, par exemple :
+
+```text
+Desktop    → Bureau
+Downloads  → Téléchargements
+Pictures   → Images
+Music      → Musique
+```
+
+Choisissez selon votre préférence.
+
+### Régler le fuseau horaire français
+
+Vérifiez le fuseau horaire actuellement utilisé :
+
+```bash
+timedatectl
+```
+
+Si le système utilise UTC, définissez le fuseau horaire de Paris :
+
+```bash
+sudo timedatectl set-timezone Europe/Paris
+```
+
+Vérifiez le résultat :
+
+```bash
+timedatectl
+```
+
+Le fuseau horaire doit maintenant être indiqué comme `Europe/Paris`.
+
+L'utilisation de `Europe/Paris` gère automatiquement le passage entre l'heure normale d'Europe centrale (**CET, UTC+1**) et l'heure d'été d'Europe centrale (**CEST, UTC+2**). Il n'est donc pas nécessaire de régler manuellement l'horloge lors des changements d'heure.
+
 *D'autres notes sur la VENTUNO Q pourront être ajoutées à ce dépôt  au fil
 des essais.*
