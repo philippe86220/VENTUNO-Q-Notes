@@ -196,6 +196,22 @@ problème graphique de Firefox.
 
 Cette modification est temporaire et n'a pas été rendue permanente.
 
+Pour revenir en arrière :
+
+``` bash
+for cpu in /sys/devices/system/cpu/cpu[0-9]*; do
+    if [ -f "$cpu/cpufreq/scaling_governor" ]; then
+        echo schedutil | sudo tee "$cpu/cpufreq/scaling_governor"
+    fi
+done
+``` 
+
+pour verifier :
+
+``` 
+cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+```
+
 ------------------------------------------------------------------------
 
 ## 3. Temps de démarrage du système
