@@ -127,7 +127,7 @@ Elle permet de vérifier la syntaxe du fichier avant de rechercher un éventuel 
 
 ---
 
-# VENTUNO Q --- Diagnostic et correction de l'accélération GPU de Firefox
+# VENTUNO Q - Diagnostic et correction de l'accélération GPU de Firefox
 
 ## Contexte
 
@@ -136,9 +136,11 @@ un terminal, il affichait également plusieurs erreurs Mesa liées au GPU
 Adreno 623.
 
 L'objectif du diagnostic était de déterminer si le problème provenait
-: - du processeur ou de la mémoire ; - du stockage eMMC ; - du pilote
-graphique du système ; - des permissions d'accès au GPU ; - ou de
-l'environnement Snap utilisé par Firefox.
+: - du processeur ou de la mémoire ; 
+- du stockage eMMC ;
+- du pilote graphique du système ;
+- des permissions d'accès au GPU ;
+- ou de l'environnement Snap utilisé par Firefox.
 
 Le diagnostic a finalement montré que l'accélération graphique de la
 VENTUNO Q fonctionnait correctement au niveau du système, mais que
