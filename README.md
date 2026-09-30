@@ -676,7 +676,7 @@ applications Snap utilisant l'accélération graphique.
 
 ------------------------------------------------------------------------
 
-## Configuration utilisée lors du diagnostic
+## 16. Configuration utilisée lors du diagnostic
 
 ``` text
 Carte :             Arduino VENTUNO Q
