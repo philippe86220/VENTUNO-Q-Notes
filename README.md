@@ -1464,7 +1464,70 @@ Front Right: 20 [65%] [-7.00dB] Playback [on]
 
 Le réglage est donc maintenant automatiquement rétabli à la valeur souhaitée après chaque connexion/redémarrage, sans modifier les fichiers UCM fournis par le système.
 
+---
 
+## Bureautique – LibreOffice Writer et Calc
+
+La VENTUNO Q peut également être utilisée comme un ordinateur de bureau classique.
+
+Pour un usage bureautique léger, il n'est pas nécessaire d'installer l'intégralité de la suite LibreOffice. Il est possible d'installer uniquement :
+
+- **LibreOffice Writer** : traitement de texte
+- **LibreOffice Calc** : tableur
+- **Interface française de LibreOffice**
+
+### Installation
+
+Mettre à jour la liste des paquets :
+
+```bash
+sudo apt update
+```
+
+Installer Writer, Calc et la localisation française :
+
+```bash
+sudo apt install libreoffice-writer libreoffice-calc libreoffice-l10n-fr
+```
+
+Dans mon cas, APT indique :
+
+```text
+Après cette opération, 357 Mo d'espace disque supplémentaires seront utilisés.
+```
+
+L'installation reste donc très légère par rapport aux 64 Go d'eMMC de la VENTUNO Q.
+
+### Lancement depuis le terminal
+
+Writer :
+
+```bash
+libreoffice --writer
+```
+
+Calc :
+
+```bash
+libreoffice --calc
+```
+
+Les deux applications sont également disponibles directement depuis le menu des applications d'Ubuntu.
+
+### Résultat du test
+
+Sur ma VENTUNO Q 16 Go / 64 Go, **LibreOffice Writer et Calc fonctionnent parfaitement et rapidement**.
+
+Après installation :
+
+```text
+Sys. de fichiers Taille Utilisé Dispo Uti% Monté sur
+/dev/mmcblk0p71     55G     20G   33G  38% /
+```
+
+L'installation de Writer et Calc occupe environ **357 Mo supplémentaires**. La variation visible avec `df -h` est arrondie et ne permet donc pas de mesurer précisément l'espace réellement consommé.
+
+Ce premier test confirme que la VENTUNO Q peut être utilisée pour des tâches bureautiques classiques, tout en conservant ses possibilités de développement avec le MPU et le MCU.
 
 ------------------------------------------------------------------------
 *D'autres notes sur la VENTUNO Q pourront être ajoutées à ce dépôt  au fil
