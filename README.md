@@ -775,6 +775,8 @@ Le fuseau horaire doit maintenant être indiqué comme `Europe/Paris`.
 
 L'utilisation de `Europe/Paris` gère automatiquement le passage entre l'heure normale d'Europe centrale (**CET, UTC+1**) et l'heure d'été d'Europe centrale (**CEST, UTC+2**). Il n'est donc pas nécessaire de régler manuellement l'horloge lors des changements d'heure.
 
+------------------------------------------------------------------------
+
 #  04 octobre 2026 : UNO Media Carrier sur VENTUNO Q --- notes et tests audio
 
 Cette section rassemble les essais réalisés avec le **UNO Media
