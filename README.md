@@ -775,6 +775,695 @@ Le fuseau horaire doit maintenant être indiqué comme `Europe/Paris`.
 
 L'utilisation de `Europe/Paris` gère automatiquement le passage entre l'heure normale d'Europe centrale (**CET, UTC+1**) et l'heure d'été d'Europe centrale (**CEST, UTC+2**). Il n'est donc pas nécessaire de régler manuellement l'horloge lors des changements d'heure.
 
+#  04 octobre 2026 : UNO Media Carrier sur VENTUNO Q --- notes et tests audio
+
+Cette section rassemble les essais réalisés avec le **UNO Media
+Carrier** monté sur une **VENTUNO Q**, ainsi que les commandes utilisées
+pour identifier et tester ses sorties audio.
+
+> **Important :** le *User Manual* en ligne du UNO Media Carrier est la
+> référence la plus explicite pour le fonctionnement des sorties audio.
+> Le datasheet PDF contient une description contradictoire concernant le
+> Line Out : il le présente comme une sortie stéréo, alors que le User
+> Manual le décrit comme une sortie mono différentielle.
+
+## 1. Les trois sorties audio
+
+Le UNO Media Carrier possède trois jacks audio 3,5 mm :
+
+-   **MIC-IN / Headphones Out** : entrée microphone + sortie casque
+    stéréo ;
+-   **Line Out** : sortie ligne mono différentielle (*balanced*) ;
+-   **Earphones Out / Ear Out** : canal droit en sortie différentielle,
+    prévu notamment pour un petit haut-parleur.
+
+Sur la VENTUNO Q testée, ALSA expose la carte audio sous le nom
+`monaco-gertrude`.
+
+``` bash
+aplay -l
+```
+
+Lors des essais, on obtient notamment :
+
+``` text
+card 0: monacogertrude [monaco-gertrude], device 0: MultiMedia1 Playback
+card 0: monacogertrude [monaco-gertrude], device 2: MultiMedia3 Playback
+```
+
+Le codec audio matériel visible sur le schéma de la VENTUNO Q est un
+**MAX98091ETM+ (U23)**.
+
+## 2. Headphones --- sortie stéréo
+
+La sortie **Headphones** est une véritable sortie stéréo.
+
+``` bash
+speaker-test -D hw:0,0 -c 2 -t wav
+```
+
+Résultat observé :
+
+``` text
+Front Left  -> haut-parleur gauche
+Front Right -> haut-parleur droit
+```
+
+Tests séparés :
+
+``` bash
+speaker-test -D hw:0,0 -c 2 -t sine -s 1
+speaker-test -D hw:0,0 -c 2 -t sine -s 2
+```
+
+Les essais ont été concluants avec un câble **TRS → TRS** correctement
+inséré ainsi qu'avec un câble **TRRS → TRS** adapté.
+
+### Volume Headphones
+
+``` bash
+amixer -c 0 get Headphone
+amixer -c 0 set Headphone 20
+```
+
+Sur la VENTUNO Q testée, 20/31 donne un niveau d'écoute confortable.
+
+Une sauvegarde ALSA peut être effectuée avec :
+
+``` bash
+sudo alsactl store 0
+```
+
+Mais lors des essais, WirePlumber/UCM réinitialisait ensuite le niveau.
+Cela a été mis en évidence avec :
+
+``` bash
+systemctl --user restart wireplumber
+```
+
+Le niveau `Headphone` revenait alors de 20 à 10.
+
+## 3. Line Out --- mono différentiel, pas stéréo
+
+Au départ, le comportement du **Line Out** semblait anormal :
+
+``` bash
+speaker-test -D hw:0,0 -c 2 -t wav
+```
+
+``` text
+Front Left  -> silence
+Front Right -> son
+```
+
+Le même résultat a été reproduit :
+
+-   avec un câble **TRS → TRS** ;
+-   avec un câble **TRRS → TRS** ;
+-   avec **deux UNO Media Carrier différents**.
+
+À l'inverse, Headphones restitue correctement les deux canaux dans le
+même environnement de test.
+
+### Explication
+
+Le *UNO Media Carrier User Manual* précise que le Line Out expose une
+paire différentielle :
+
+``` text
+LINEOUT_P
+LINEOUT_M
+```
+
+Il ne s'agit donc **pas** de Left et Right. Les deux conducteurs
+constituent les deux phases d'un **unique canal mono symétrique**
+(*balanced mono*), destiné notamment aux équipements possédant une
+entrée symétrique.
+
+``` text
+TRS stéréo asymétrique       TRS mono symétrique
+
+Tip    = Left                Tip    = signal +
+Ring   = Right               Ring   = signal -
+Sleeve = GND                 Sleeve = GND / blindage
+```
+
+Un connecteur TRS ne signifie donc pas nécessairement « stéréo ».
+
+### Commandes indiquées par le User Manual pour Line Out
+
+``` bash
+amixer -c0 cset iface=MIXER,name='RX_CODEC_DMA_RX_0 Audio Mixer MultiMedia2' 1
+amixer -c0 cset iface=MIXER,name='RX_MACRO RX0 MUX' 1
+amixer -c0 cset iface=MIXER,name='RX INT0_1 MIX1 INP0' 'RX0'
+amixer -c0 cset iface=MIXER,name='RX INT0 DEM MUX' 1
+amixer -c0 cset iface=MIXER,name='LO_RDAC Switch' 1
+amixer -c0 cset iface=MIXER,name='RX_RX0 Digital Volume' 80
+```
+
+Lecture :
+
+``` bash
+aplay -D plughw:0,1 /usr/share/sounds/alsa/Front_Center.wav
+```
+
+Fermeture du chemin :
+
+``` bash
+amixer -c0 cset iface=MIXER,name='RX_CODEC_DMA_RX_0 Audio Mixer MultiMedia2' 0
+amixer -c0 cset iface=MIXER,name='RX_MACRO RX0 MUX' 'ZERO'
+amixer -c0 cset iface=MIXER,name='RX INT0_1 MIX1 INP0' 'ZERO'
+amixer -c0 cset iface=MIXER,name='LO_RDAC Switch' 0
+```
+
+> Ces commandes proviennent du User Manual du UNO Media Carrier. Les
+> essais décrits plus haut sur la VENTUNO Q ont principalement utilisé
+> `speaker-test` et la configuration audio du système.
+
+## 4. Contradiction entre le User Manual et le datasheet
+
+Le **User Manual en ligne** indique clairement que Line Out est un
+**canal mono différentiel** (`LINEOUT_P / LINEOUT_M`).
+
+En revanche, le **datasheet PDF du UNO Media Carrier** décrit Line Out
+comme :
+
+> "Stereo line-level output for connection to external amplifiers or
+> powered speakers."
+
+Ces deux descriptions sont contradictoires.
+
+Les essais réalisés sur la VENTUNO Q correspondent au comportement
+décrit par le **User Manual** : Line Out ne se comporte pas comme une
+sortie casque stéréo Left/Right.
+
+## 5. Ear Out --- canal droit différentiel
+
+Le User Manual indique explicitement que **Earphone Output fournit le
+canal droit sous forme d'une paire différentielle**.
+
+Il précise qu'un petit haut-parleur peut y être connecté avec une
+impédance comprise entre :
+
+``` text
+10,67 Ω à 32 Ω
+```
+
+Le haut-parleur se connecte **entre les deux conducteurs actifs** de la
+paire différentielle ; la masse n'est pas utilisée comme retour du
+haut-parleur.
+
+``` text
+EAR_P  --------+
+               | haut-parleur
+EAR_M  --------+
+
+GND   ---------X   non utilisé comme retour du HP
+```
+
+### Essai effectué
+
+Un petit haut-parleur **8 Ω** a été utilisé uniquement pour un essai
+ponctuel :
+
+``` text
+Front Right -> son
+Front Left  -> silence
+```
+
+Le niveau sonore était faible, mais le comportement correspond à la
+documentation : **Ear Out fournit uniquement le canal droit**.
+
+> **Attention :** 8 Ω est inférieur à la plage documentée de 10,67--32
+> Ω. Ce test n'est pas une recommandation d'utilisation. Pour une
+> utilisation normale, respecter la plage d'impédance indiquée par
+> Arduino.
+
+### Commandes indiquées par le User Manual pour Ear Out
+
+``` bash
+amixer -c0 cset iface=MIXER,name='RX_CODEC_DMA_RX_0 Audio Mixer MultiMedia2' 1
+amixer -c0 cset iface=MIXER,name='RX_MACRO RX0 MUX' 1
+amixer -c0 cset iface=MIXER,name='RX INT0_1 MIX1 INP0' 'RX0'
+amixer -c0 cset iface=MIXER,name='RX INT0 DEM MUX' 1
+amixer -c0 cset iface=MIXER,name='EAR_RDAC Switch' 1
+amixer -c0 cset iface=MIXER,name='HPHL Switch' 1
+amixer -c0 cset iface=MIXER,name='RX_RX0 Digital Volume' 80
+```
+
+Lecture :
+
+``` bash
+aplay -D hw:0,1 /home/arduino/recording.wav
+```
+
+Fermeture du chemin :
+
+``` bash
+amixer -c0 cset iface=MIXER,name='RX_CODEC_DMA_RX_0 Audio Mixer MultiMedia2' 0
+amixer -c0 cset iface=MIXER,name='RX_MACRO RX0 MUX' 'ZERO'
+amixer -c0 cset iface=MIXER,name='RX INT0_1 MIX1 INP0' 'ZERO'
+amixer -c0 cset iface=MIXER,name='RX INT0 DEM MUX' 'NORMAL_DSM_OUT'
+amixer -c0 cset iface=MIXER,name='EAR_RDAC Switch' 0
+amixer -c0 cset iface=MIXER,name='HPHL Switch' 0
+```
+
+## 6. Résumé pratique
+
+  -----------------------------------------------------------------------
+  Sortie            Type              Canaux            Usage
+  ----------------- ----------------- ----------------- -----------------
+  **Headphones**    Stéréo            Left + Right      Casque,
+                    asymétrique                         enceinte/AUX
+                                                        stéréo
+
+  **Line Out**      Mono différentiel Un canal mono     Entrée
+                    / balanced                          symétrique, audio
+                                                        pro/industriel
+
+  **Ear Out**       Différentiel      Right uniquement  Petit
+                                                        haut-parleur
+                                                        10,67--32 Ω
+  -----------------------------------------------------------------------
+
+Pour une application comme une **WebRadio reliée à une enceinte JBL par
+son entrée AUX stéréo**, **Headphones** est la sortie la plus adaptée.
+
+## 7. Références Arduino
+
+-   UNO Media Carrier :
+    https://docs.arduino.cc/hardware/uno-media-carrier/
+-   UNO Media Carrier User Manual :
+    https://docs.arduino.cc/tutorials/uno-media-carrier/user-manual/
+-   UNO Media Carrier datasheet :
+    https://docs.arduino.cc/resources/datasheets/ASX00083-datasheet.pdf
+-   UNO Media Carrier schematics :
+    https://docs.arduino.cc/resources/schematics/ASX00083-schematics.pdf
+-   VENTUNO Q : https://docs.arduino.cc/hardware/ventuno-q/
+
+## Conclusion
+
+Les essais audio ont d'abord laissé penser à un problème de canal gauche
+sur Line Out. La comparaison avec Headphones, l'utilisation de plusieurs
+câbles et de deux Media Carriers différents ont permis d'écarter un
+défaut simple de câble ou de carte.
+
+La consultation du **UNO Media Carrier User Manual** a finalement
+clarifié l'architecture :
+
+-   **Headphones** est stéréo ;
+-   **Line Out** est une sortie **mono différentielle** ;
+-   **Ear Out** fournit le **canal droit en différentiel** et accepte,
+    selon Arduino, un petit haut-parleur de **10,67 à 32 Ω**.
+
+Cette distinction est importante : un connecteur **TRS** peut
+transporter soit un signal stéréo asymétrique, soit un signal mono
+symétrique selon la conception de l'équipement.
+
+
+## 8. Commandes utilisées pendant les tests sur la VENTUNO Q
+
+Cette section regroupe les principales commandes réellement utilisées pendant les essais. Elles ont permis de distinguer ce qui relevait du flux audio ALSA, du routage vers les différentes sorties et du réglage du volume.
+
+### Lister les périphériques audio ALSA
+
+```bash
+aplay -l
+```
+
+Cette commande affiche les cartes et périphériques ALSA disponibles pour la lecture audio.
+
+Elle a notamment permis d'identifier sur la VENTUNO Q la carte :
+
+```text
+monaco-gertrude
+```
+
+ainsi que les périphériques de lecture disponibles, dont `MultiMedia1 Playback`.
+
+---
+
+### Tester les deux canaux avec une annonce vocale
+
+```bash
+speaker-test -D hw:0,0 -c 2 -t wav
+```
+
+Explication des options :
+
+- `-D hw:0,0` : utilise directement la carte ALSA 0, périphérique 0 ;
+- `-c 2` : demande un flux à deux canaux ;
+- `-t wav` : utilise les fichiers WAV de test de `speaker-test`.
+
+La commande annonce alternativement :
+
+```text
+Front Left
+Front Right
+```
+
+Elle a été essentielle pour comparer les sorties physiques.
+
+Avec **Headphones** :
+
+```text
+Front Left  -> gauche
+Front Right -> droite
+```
+
+Avec **Line Out** :
+
+```text
+Front Left  -> silence
+Front Right -> son
+```
+
+Le comportement Line Out a été reproduit avec deux types de câbles et deux UNO Media Carrier différents.
+
+---
+
+### Tester uniquement Front Left
+
+```bash
+speaker-test -D hw:0,0 -c 2 -t sine -s 1
+```
+
+- `-t sine` génère un signal sinusoïdal ;
+- `-s 1` sélectionne le premier canal, **Front Left**.
+
+Cette commande permet de tester un canal sans attendre l'alternance automatique de `speaker-test`.
+
+Sur Line Out, aucun son n'a été obtenu avec ce canal.
+
+---
+
+### Tester uniquement Front Right
+
+```bash
+speaker-test -D hw:0,0 -c 2 -t sine -s 2
+```
+
+- `-s 2` sélectionne le second canal, **Front Right**.
+
+Sur Line Out, ce test produit du son.
+
+Il a également permis de vérifier le fonctionnement de **Ear Out** avec le petit haut-parleur utilisé pour l'essai.
+
+---
+
+### Afficher le volume de la sortie Headphones
+
+```bash
+amixer -c 0 get Headphone
+```
+
+- `amixer` permet de consulter ou modifier les contrôles du mixer ALSA ;
+- `-c 0` sélectionne la carte audio 0 ;
+- `get Headphone` affiche l'état et le niveau du contrôle `Headphone`.
+
+Cette commande a notamment montré que le niveau par défaut était revenu à **10/31** après redémarrage.
+
+---
+
+### Régler le volume Headphones
+
+```bash
+amixer -c 0 set Headphone 20
+```
+
+Cette commande règle le contrôle `Headphone` à **20/31**.
+
+Ce niveau s'est révélé adapté aux essais réalisés.
+
+---
+
+### Sauvegarder l'état ALSA
+
+```bash
+sudo alsactl store 0
+```
+
+Cette commande sauvegarde l'état courant des contrôles ALSA de la carte 0.
+
+Pendant les essais, la valeur 20 était bien enregistrée, mais elle revenait ensuite à 10 après redémarrage.
+
+---
+
+### Restaurer manuellement l'état ALSA
+
+```bash
+sudo alsactl restore 0
+```
+
+Cette commande recharge manuellement l'état ALSA précédemment sauvegardé.
+
+Lors des essais, elle restaurait correctement le niveau `Headphone` à 20.
+
+Cela a permis de vérifier que la sauvegarde ALSA elle-même était correcte.
+
+---
+
+### Vérifier l'influence de WirePlumber
+
+```bash
+systemctl --user restart wireplumber
+```
+
+Cette commande redémarre **WirePlumber**, le gestionnaire de session utilisé avec PipeWire.
+
+Pendant les tests, son redémarrage faisait revenir le niveau `Headphone` de **20 à 10**.
+
+Cela a montré que le changement de volume après démarrage ne provenait pas d'un échec de `alsactl store`, mais d'une réinitialisation ultérieure du chemin audio par la couche PipeWire/WirePlumber/UCM.
+
+---
+
+### Examiner les commutateurs Headphone
+
+```bash
+amixer -c 0 get 'Headphone Left'
+amixer -c 0 get 'Headphone Right'
+```
+
+Ces commandes permettent de vérifier séparément si les chemins analogiques gauche et droit de la sortie Headphones sont activés.
+
+Pendant les essais, les deux étaient sur `on`.
+
+---
+
+### Examiner les commutateurs Receiver utilisés par Line Out
+
+```bash
+amixer -c 0 get 'Receiver Left'
+amixer -c 0 get 'Receiver Right'
+```
+
+Ces commandes ont permis de constater que les deux contrôles `Receiver` étaient activés dans ALSA.
+
+Ce résultat, pris isolément, pouvait faire penser que Line Out devait être stéréo. La documentation du Media Carrier a ensuite clarifié que sa sortie physique Line Out est en réalité un **canal mono différentiel**.
+
+---
+
+### Examiner le mode Line Out
+
+```bash
+amixer -c 0 cget name='LINMOD Mux'
+```
+
+Le contrôle retournait notamment les choix :
+
+```text
+Item #0 'Left Only'
+Item #1 'Left and Right'
+```
+
+avec :
+
+```text
+values=1
+```
+
+Ce contrôle faisait partie des éléments étudiés pendant la recherche de la cause. Il décrit un réglage interne du chemin audio ; il ne suffit pas, à lui seul, à déterminer la nature électrique du jack Line Out.
+
+La documentation matérielle reste déterminante : le jack expose `LINEOUT_P / LINEOUT_M` comme une **paire différentielle mono**.
+
+---
+
+### Vérifier les niveaux des mixers Receiver
+
+```bash
+amixer -c 0 get 'Receiver Left Mixer'
+amixer -c 0 get 'Receiver Right Mixer'
+```
+
+Ces commandes ont servi à rechercher une éventuelle différence de gain entre les deux chemins internes.
+
+Pendant les essais, les deux étaient réglés au même niveau :
+
+```text
+2 [67%] [-6.00dB]
+```
+
+Aucune asymétrie évidente n'a donc été trouvée à ce niveau.
+
+---
+
+### Ce que ces commandes ont permis d'établir
+
+Les commandes seules ne permettaient pas d'expliquer complètement le comportement de Line Out. Elles ont cependant permis de vérifier que :
+
+- le flux envoyé à `hw:0,0` pouvait contenir deux canaux ;
+- Headphones reproduisait correctement Left et Right ;
+- Line Out ne reproduisait que Front Right dans notre configuration de test ;
+- le problème n'était pas simplement dû à un contrôle Left désactivé ou à un niveau différent ;
+- le réglage de volume Headphones était réappliqué par la pile audio après la restauration ALSA.
+
+C'est finalement la consultation du **UNO Media Carrier User Manual**, combinée aux essais, qui a permis d'interpréter correctement le Line Out comme une sortie **mono différentielle** et Ear Out comme une sortie différentielle du **canal droit**.
+
+
+### Rendre le volume Headphones permanent après redémarrage
+
+Un point supplémentaire concernant la sortie audio du Media Carrier : j'ai trouvé une méthode permettant de conserver mon niveau de volume préféré pour la sortie casque après un redémarrage.
+
+Sur ma VENTUNO Q, le contrôle ALSA `Headphone` utilise une plage de 0 à 31.
+
+La valeur par défaut après le démarrage était :
+
+```text
+Headphone = 10 / 31
+```
+
+Pour mon casque et mes enceintes PC amplifiées, je préfère :
+
+```text
+Headphone = 20 / 31
+```
+
+Cette valeur peut être réglée manuellement avec :
+
+```bash
+amixer -c 0 set Headphone 20
+```
+
+Cependant, cette valeur n'était pas conservée après un redémarrage.
+
+#### Pourquoi le volume revenait à 10
+
+J'ai d'abord essayé de sauvegarder l'état ALSA avec :
+
+```bash
+sudo alsactl store 0
+```
+
+L'état sauvegardé contenait bien :
+
+```text
+name 'Headphone Volume'
+value.0 20
+value.1 20
+```
+
+et une restauration manuelle avec :
+
+```bash
+sudo alsactl restore 0
+```
+
+rétablissait correctement le volume à 20.
+
+Cependant, après un redémarrage, le volume revenait à 10.
+
+La raison se trouve dans la configuration UCM utilisée par le codec MAX98090.
+
+La configuration UCM de la VENTUNO Q :
+
+```text
+/usr/share/alsa/ucm2/Qualcomm/qcs8300/monaco-gertrude/HiFi.conf
+```
+
+inclut :
+
+```text
+/codecs/max98090/EnableSeq.conf
+```
+
+et ce fichier contient :
+
+```text
+cset "name='Headphone Volume' 10"
+cset "name='Speaker Volume' 10"
+```
+
+Ainsi, lorsque WirePlumber initialise le périphérique audio et active la configuration UCM, le volume de la sortie casque est initialisé à 10.
+
+Je l'ai confirmé expérimentalement : le redémarrage de WirePlumber faisait revenir la valeur ALSA `Headphone` de 20 à 10.
+
+#### Ma solution
+
+Plutôt que de modifier les fichiers UCM du système situés dans `/usr/share/alsa/ucm2/`, j'ai créé un petit service systemd utilisateur qui applique la valeur souhaitée après que WirePlumber a initialisé le système audio.
+
+Créer le répertoire des services utilisateur si nécessaire :
+
+```bash
+mkdir -p ~/.config/systemd/user
+```
+
+Puis créer :
+
+```text
+~/.config/systemd/user/ventuno-headphone-volume.service
+```
+
+avec le contenu suivant :
+
+```ini
+[Unit]
+Description=Set VENTUNO Q headphone volume
+After=wireplumber.service
+Requires=wireplumber.service
+
+[Service]
+Type=oneshot
+ExecStartPre=/usr/bin/sleep 5
+ExecStart=/usr/bin/amixer -c 0 set Headphone 20
+RemainAfterExit=yes
+
+[Install]
+WantedBy=default.target
+```
+
+Le délai de **5 secondes** est nécessaire sur mon système car `wireplumber.service` utilise `Type=simple`. systemd considère donc WirePlumber comme démarré avant que celui-ci ait terminé l'initialisation du périphérique audio ALSA/UCM.
+
+Sans ce délai, mon service réglait bien le volume à 20, mais l'initialisation UCM effectuée ensuite le ramenait à 10.
+
+J'ai ensuite rechargé la configuration systemd utilisateur :
+
+```bash
+systemctl --user daemon-reload
+```
+
+puis activé le service :
+
+```bash
+systemctl --user enable ventuno-headphone-volume.service
+```
+
+Après avoir redémarré la VENTUNO Q, j'ai vérifié avec :
+
+```bash
+amixer -c 0 get Headphone
+```
+
+et j'obtiens maintenant :
+
+```text
+Front Left: 20 [65%] [-7.00dB] Playback [on]
+Front Right: 20 [65%] [-7.00dB] Playback [on]
+```
+
+Le réglage est donc maintenant automatiquement rétabli à la valeur souhaitée après chaque connexion/redémarrage, sans modifier les fichiers UCM fournis par le système.
+
+
+
 ------------------------------------------------------------------------
 *D'autres notes sur la VENTUNO Q pourront être ajoutées à ce dépôt  au fil
 des essais.*
