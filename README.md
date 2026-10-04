@@ -1529,6 +1529,12 @@ L'installation de Writer et Calc occupe environ **357 Mo supplémentaires**. La 
 
 Ce premier test confirme que la VENTUNO Q peut être utilisée pour des tâches bureautiques classiques, tout en conservant ses possibilités de développement avec le MPU et le MCU.
 
+---
+
+Ubuntu 26.04.1 LTS est proposé automatiquement par le gestionnaire de mises à jour, mais mise à niveau différée dans l'attente d'une confirmation de compatibilité VENTUNO Q.
+
+---
+
 ------------------------------------------------------------------------
 *D'autres notes sur la VENTUNO Q pourront être ajoutées à ce dépôt  au fil
 des essais.*
