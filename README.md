@@ -1637,6 +1637,169 @@ La mention **« Stereo line-level output »** du datasheet a été reconnue comm
 
 Cette clarification explique les résultats obtenus lors de mes essais et montre également l'importance de tenir compte des différences matérielles entre la **UNO Q** et la **VENTUNO Q**, même lorsqu'elles utilisent le même UNO Media Carrier.
 
+---
+
+# Mises à jour Ubuntu sur la VENTUNO Q
+
+La VENTUNO Q fonctionne actuellement sous :
+
+``` bash
+cat /etc/os-release
+```
+
+Version testée :
+
+``` text
+Ubuntu 24.04.4 LTS (Noble Numbat)
+```
+
+## Mise à niveau vers Ubuntu 26.04 LTS
+
+Ubuntu peut proposer une mise à niveau vers **Ubuntu 26.04.1 LTS**.
+
+Pour le moment, je conserve **Ubuntu 24.04 LTS** sur la VENTUNO Q et je
+n'effectue pas cette mise à niveau majeure, afin de préserver
+l'environnement logiciel et matériel actuellement fonctionnel.
+
+Les mises à jour normales de **Ubuntu 24.04 LTS** peuvent en revanche
+être installées :
+
+``` bash
+sudo apt update
+sudo apt upgrade
+```
+
+## Protection du firmware Qualcomm Dragonwing
+
+Lors d'une vérification des paquets pouvant être mis à jour :
+
+``` bash
+apt policy linux-firmware-dragonwing
+```
+
+une version plus récente était disponible dans le dépôt Qualcomm :
+
+``` text
+Installé : 20260612
+Candidat : 20260613
+```
+
+Dépôt :
+
+``` text
+https://ppa.launchpadcontent.net/ubuntu-qcom-iot/qcom-ppa/ubuntu
+```
+
+Cependant, le paquet est placé en **hold** :
+
+``` bash
+apt-mark showhold
+```
+
+Résultat :
+
+``` text
+linux-firmware-dragonwing
+```
+
+Une vérification supplémentaire :
+
+``` bash
+dpkg -s linux-firmware-dragonwing | grep -E '^(Status|Version):'
+```
+
+donne :
+
+``` text
+Status: hold ok installed
+Version: 20260612
+```
+
+APT respecte donc ce gel et conserve le firmware installé même
+lorsqu'une version plus récente est disponible.
+
+**Ne pas supprimer ce `hold` sans savoir précisément pourquoi cette
+version du firmware a été conservée.**
+
+## Mise à jour Qualcomm ALSA
+
+Le paquet spécifique Qualcomm :
+
+``` text
+alsa-conf-qcom
+```
+
+provient également du PPA `ubuntu-qcom-iot/qcom-ppa`.
+
+Lors de la mise à jour Ubuntu 24.04, il est passé de :
+
+``` text
+1.17 → 1.18
+```
+
+Description du paquet :
+
+``` text
+ALSA topology, USM and config for QCM6490
+```
+
+Après redémarrage, l'audio de la VENTUNO Q a été testé et fonctionne
+correctement.
+
+## Noyau
+
+Après la mise à jour :
+
+``` bash
+uname -r
+```
+
+Résultat :
+
+``` text
+6.8.0-1084-qcom
+```
+
+Le noyau Qualcomm est resté inchangé pendant cette opération.
+
+## GPU / Mesa
+
+Certaines mises à jour Mesa ont été temporairement différées par le
+mécanisme de **phased updates** d'Ubuntu.
+
+Après redémarrage :
+
+``` bash
+eglinfo -B
+```
+
+confirme toujours :
+
+``` text
+OpenGL core profile vendor: freedreno
+OpenGL core profile renderer: Adreno623
+OpenGL core profile version: 4.6 (Core Profile) Mesa 25.2.8-0ubuntu0.24.04.2
+```
+
+L'accélération GPU matérielle fonctionne donc toujours correctement.
+
+## Conclusion
+
+Les mises à jour courantes de **Ubuntu 24.04 LTS** ont été effectuées
+avec succès sur la VENTUNO Q.
+
+Le système conserve certains mécanismes de protection, notamment le
+`hold` appliqué au firmware Dragonwing, tandis que les composants Ubuntu
+et Qualcomm autorisés peuvent être mis à jour normalement.
+
+Pour le moment :
+
+-   mises à jour normales Ubuntu 24.04 : **OK**
+-   `linux-firmware-dragonwing` : **laisser en hold**
+-   mises à jour différées par phasage : **ne pas forcer**
+-   mise à niveau Ubuntu 24.04 → 26.04 : **non effectuée**
+
+
 ------------------------------------------------------------------------
 *D'autres notes sur la VENTUNO Q pourront être ajoutées à ce dépôt  au fil
 des essais.*
