@@ -1533,6 +1533,110 @@ Ce premier test confirme que la VENTUNO Q peut être utilisée pour des tâches 
 
 Ubuntu 26.04.1 LTS est proposé automatiquement par le gestionnaire de mises à jour, mais mise à niveau différée dans l'attente d'une confirmation de compatibilité VENTUNO Q.
 
+# 05 octobre 2026 : clarification concernant le Line Out
+
+À la suite des essais réalisés le 4 octobre, une clarification importante a été apportée sur le forum Arduino par **ptillisch (Arduino Team)**.
+
+Les résultats expérimentaux observés sur ma VENTUNO Q restent valables, mais leur interprétation doit être corrigée.
+
+## Différence entre UNO Q et VENTUNO Q
+
+Le **UNO Media Carrier User Manual** décrit le Line Out comme une sortie mono différentielle utilisant :
+
+```text
+LINEOUT_P
+LINEOUT_M
+```
+
+Cependant, ptillisch a précisé que cette description concerne spécifiquement l'utilisation du **UNO Media Carrier avec la UNO Q**.
+
+Le comportement électrique du Line Out est différent avec la **VENTUNO Q** :
+
+```text
+UNO Q + UNO Media Carrier
+→ Line Out mono différentiel (differential / balanced)
+
+VENTUNO Q + UNO Media Carrier
+→ Line Out mono single-ended
+```
+
+Cette différence matérielle explique pourquoi il était difficile d'interpréter les essais réalisés sur la VENTUNO Q uniquement à partir du User Manual du UNO Media Carrier.
+
+## Erreur dans le datasheet du UNO Media Carrier
+
+Le datasheet du UNO Media Carrier indiquait :
+
+> "Line Out: Stereo line-level output for connection to external amplifiers or powered speakers."
+
+Cette description est incorrecte.
+
+ptillisch a indiqué avoir signalé cette erreur à l'équipe Arduino responsable de cette documentation.
+
+Le Line Out ne doit donc pas être interprété comme une sortie stéréo Left/Right.
+
+## Pourquoi le User Manual parle-t-il d'une sortie différentielle ?
+
+Le User Manual indique :
+
+> "The line output exposes a differential audio pair (LINEOUT_P / LINEOUT_M) rather than a traditional stereo Left/Right signal."
+
+ptillisch a précisé que cette description est correcte dans le contexte actuellement officiellement supporté :
+
+**UNO Q + UNO Media Carrier**.
+
+À ce jour, Arduino ne supporte officiellement l'utilisation du **UNO Media Carrier qu'avec la UNO Q**.
+
+L'utilisation du Media Carrier avec la **VENTUNO Q** n'est donc actuellement pas officiellement supportée.
+
+C'est pourquoi Arduino ne considère pas la description « differential » du User Manual comme une erreur. Cette documentation devra éventuellement être reformulée si le support officiel du Media Carrier avec la VENTUNO Q est ajouté ultérieurement.
+
+## Conséquence pour mes essais du 4 octobre
+
+Les observations réalisées restent correctes :
+
+```text
+Headphones :
+Front Left  -> son à gauche
+Front Right -> son à droite
+
+Line Out :
+Front Left  -> silence
+Front Right -> son
+```
+
+Le même comportement du Line Out a été reproduit avec :
+
+- un câble TRS → TRS ;
+- un câble TRRS → TRS ;
+- deux UNO Media Carrier différents.
+
+Ces essais permettaient donc bien d'écarter un simple défaut du câble ou du premier Media Carrier.
+
+En revanche, l'interprétation faite le 4 octobre doit être corrigée :
+
+```text
+Ancienne interprétation :
+VENTUNO Q Line Out = mono différentiel
+
+Clarification du 5 octobre :
+VENTUNO Q Line Out = mono single-ended
+```
+
+Il est également important de ne pas transposer directement à la VENTUNO Q les caractéristiques électriques décrites dans le User Manual pour l'association officiellement supportée **UNO Q + UNO Media Carrier**.
+
+## Conclusion de cette clarification
+
+Les informations disponibles permettent maintenant de distinguer clairement les deux configurations :
+
+| Configuration | Line Out |
+|---|---|
+| **UNO Q + UNO Media Carrier** | Mono différentiel |
+| **VENTUNO Q + UNO Media Carrier** | Mono single-ended |
+
+La mention **« Stereo line-level output »** du datasheet a été reconnue comme une erreur et signalée à l'équipe Arduino.
+
+Cette clarification explique les résultats obtenus lors de mes essais et montre également l'importance de tenir compte des différences matérielles entre la **UNO Q** et la **VENTUNO Q**, même lorsqu'elles utilisent le même UNO Media Carrier.
+
 ------------------------------------------------------------------------
 *D'autres notes sur la VENTUNO Q pourront être ajoutées à ce dépôt  au fil
 des essais.*
