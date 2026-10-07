@@ -1957,6 +1957,117 @@ Cela permet de confirmer que Firefox utilise bien l'accélération graphique mat
 - **Firefox :** version officielle Mozilla, hors Snap
 
 > **Remarque :** les deux versions de Firefox fonctionnent avec l'accélération GPU une fois Mesa correctement configuré. Le choix de la version officielle Mozilla repose ici sur mon expérience d'utilisation : elle me semble plus réactive sur ma VENTUNO Q. Il ne s'agit pas d'un benchmark de performances.
+
+--- 
+
+### Définir Firefox Mozilla comme navigateur par défaut
+
+Après la suppression de Firefox Snap et la création du nouveau fichier :
+
+```text
+~/.local/share/applications/firefox.desktop
+```
+
+une ancienne définition de Firefox peut encore être présente dans le même répertoire, par exemple :
+
+```text
+userapp-Firefox-EOH0W3.desktop
+```
+
+Dans mon cas, son contenu était :
+
+```ini
+[Desktop Entry]
+Encoding=UTF-8
+Version=1.0
+Type=Application
+NoDisplay=true
+Exec=/home/arduino/firefox/firefox-bin %u
+Name=Firefox
+Comment=Définition personnalisée pour Firefox
+```
+
+La ligne :
+
+```ini
+NoDisplay=true
+```
+
+indique que ce fichier n'est pas destiné à apparaître dans le menu des applications GNOME.
+
+Il était cependant encore utilisé comme définition du navigateur par défaut.
+
+Pour utiliser le nouveau `firefox.desktop` :
+
+```bash
+xdg-settings set default-web-browser firefox.desktop
+```
+
+Définir également Firefox pour les protocoles HTTP et HTTPS :
+
+```bash
+xdg-mime default firefox.desktop x-scheme-handler/http
+xdg-mime default firefox.desktop x-scheme-handler/https
+```
+
+Vérifier la configuration :
+
+```bash
+xdg-settings get default-web-browser
+xdg-mime query default x-scheme-handler/http
+xdg-mime query default x-scheme-handler/https
+```
+
+Dans les trois cas, le résultat doit être :
+
+```text
+firefox.desktop
+```
+
+L'ancienne définition personnalisée peut alors être supprimée :
+
+```bash
+cd ~/.local/share/applications
+rm userapp-Firefox-EOH0W3.desktop
+```
+
+> **Remarque :** le nom `userapp-Firefox-EOH0W3.desktop` est propre à mon installation. Il peut être différent sur une autre machine.
+
+### À propos de `mimeinfo.cache`
+
+Le répertoire :
+
+```text
+~/.local/share/applications/
+```
+
+contient également :
+
+```text
+mimeinfo.cache
+```
+
+Ce fichier est un **cache des associations MIME déclarées par les fichiers `.desktop`**.
+
+Il peut notamment être généré ou actualisé avec :
+
+```bash
+update-desktop-database ~/.local/share/applications/
+```
+
+Cette commande n'est pas indispensable après chaque modification dans le cas présent.
+
+`mimeinfo.cache` n'est pas un fichier de configuration à modifier manuellement. Il peut être régénéré et il est préférable de simplement le conserver.
+
+Après nettoyage, mon répertoire contient donc :
+
+```text
+~/.local/share/applications/
+├── firefox.desktop
+└── mimeinfo.cache
+```
+
+Le fichier `firefox.desktop` assure l'intégration de la version officielle Mozilla dans GNOME, tandis que `mimeinfo.cache` contient le cache des associations MIME.
 ------------------------------------------------------------------------
 *D'autres notes sur la VENTUNO Q pourront être ajoutées à ce dépôt  au fil
 des essais.*
