@@ -1825,6 +1825,138 @@ Je n'ai rencontré aucune erreur ou déconnexion lors de ces tests.
 
 **Jusqu'à présent, tout ce que j'ai testé concernant le stockage externe et la lecture multimédia sur le VENTUNO Q a très bien fonctionné.** 
 
+---
+
+# 7 octobre  2026 : Firefox officiel Mozilla à la place de Firefox Snap
+
+La VENTUNO Q est livrée avec Firefox installé sous forme de **Snap**.
+
+Après avoir corrigé le problème initial d'accélération graphique, Firefox Snap utilise correctement **WebRender** avec le GPU **Adreno 623 / freedreno (Mesa)**.
+
+J'ai ensuite installé et testé la version officielle de Firefox distribuée directement par Mozilla.
+
+Les deux versions utilisent bien l'accélération graphique matérielle avec WebRender et l'Adreno 623. Cependant, dans mon utilisation quotidienne de la VENTUNO Q, la version officielle Mozilla me semble plus réactive que la version Snap.
+
+J'ai donc choisi de supprimer Firefox Snap et de conserver uniquement la version officielle Mozilla.
+
+### Suppression de Firefox Snap
+
+Fermer Firefox, puis exécuter :
+
+```bash
+sudo snap remove firefox
+```
+
+Il n'est pas nécessaire de supprimer `snapd`. Seule l'application Firefox Snap est supprimée.
+
+On peut vérifier les paquets Snap encore installés avec :
+
+```bash
+snap list
+```
+
+### Emplacement de Firefox Mozilla
+
+Dans mon installation, Firefox Mozilla est conservé directement dans mon dossier personnel :
+
+```text
+/home/arduino/firefox
+```
+
+L'exécutable Firefox est donc :
+
+```text
+/home/arduino/firefox/firefox
+```
+
+Il n'est pas obligatoire de déplacer Firefox dans `/opt`. La version officielle fonctionne correctement depuis le dossier personnel.
+
+Pour vérifier la version :
+
+```bash
+/home/arduino/firefox/firefox --version
+```
+
+### Création d'un lanceur GNOME
+
+La suppression de Firefox Snap supprime également son lanceur d'application et son icône dans GNOME.
+
+Il faut donc créer un nouveau lanceur pour la version officielle Mozilla.
+
+Créer le répertoire des applications locales s'il n'existe pas :
+
+```bash
+mkdir -p ~/.local/share/applications
+```
+
+Puis créer le fichier :
+
+```bash
+nano ~/.local/share/applications/firefox.desktop
+```
+
+Ajouter le contenu suivant :
+
+```ini
+[Desktop Entry]
+Name=Firefox
+Comment=Navigateur Web
+Exec=/home/arduino/firefox/firefox %u
+Icon=/home/arduino/firefox/browser/chrome/icons/default/default128.png
+Terminal=false
+Type=Application
+Categories=Network;WebBrowser;
+StartupNotify=true
+MimeType=text/html;text/xml;application/xhtml+xml;x-scheme-handler/http;x-scheme-handler/https;
+```
+
+Enregistrer avec :
+
+```text
+Ctrl+O
+Entrée
+Ctrl+X
+```
+
+Puis rendre le lanceur exécutable :
+
+```bash
+chmod +x ~/.local/share/applications/firefox.desktop
+```
+
+Firefox apparaît alors à nouveau dans la liste des applications GNOME avec son icône.
+
+Il peut ensuite être ajouté aux favoris pour retrouver son icône directement dans le dock.
+
+### Vérification de l'accélération graphique
+
+Dans Firefox, ouvrir :
+
+```text
+about:support
+```
+
+Dans la section graphique, vérifier notamment l'utilisation de :
+
+```text
+WebRender
+Adreno 623
+Mesa / freedreno
+```
+
+Cela permet de confirmer que Firefox utilise bien l'accélération graphique matérielle et non le rendu logiciel `llvmpipe`.
+
+### Configuration testée
+
+- **Carte :** Arduino VENTUNO Q
+- **Système :** Ubuntu 24.04.4 LTS
+- **Architecture :** ARM64 / aarch64
+- **GPU :** Qualcomm Adreno 623
+- **Pilote graphique :** freedreno / Mesa
+- **Accélération Firefox :** WebRender
+- **Firefox :** version officielle Mozilla, hors Snap
+
+> **Remarque :** les deux versions de Firefox fonctionnent avec l'accélération GPU une fois Mesa correctement configuré. Le choix de la version officielle Mozilla repose ici sur mon expérience d'utilisation : elle me semble plus réactive sur ma VENTUNO Q. Il ne s'agit pas d'un benchmark de performances.
 ------------------------------------------------------------------------
 *D'autres notes sur la VENTUNO Q pourront être ajoutées à ce dépôt  au fil
 des essais.*
