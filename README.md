@@ -1801,7 +1801,7 @@ Pour le moment :
 
 ---
 
-# Tests périphériques USB :
+# 6 octobre  2026 : Tests périphériques USB :
 
 ## Petits tests de stockage et multimédia supplémentaires sur ma VENTUNO Q :
 
