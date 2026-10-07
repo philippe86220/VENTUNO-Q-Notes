@@ -1799,6 +1799,31 @@ Pour le moment :
 -   mises à jour différées par phasage : **ne pas forcer**
 -   mise à niveau Ubuntu 24.04 → 26.04 : **non effectuée**
 
+---
+
+# Tests périphériques USB :
+
+## Petits tests de stockage et multimédia supplémentaires sur ma VENTUNO Q :
+
+J'ai testé:
+
+    - un disque dur SATA de 2,5 po à l'aide d'un dock/adaptateur SATA ;
+    - un disque dur SATA de 3,5 po (WD Caviar Blue 500 Go) utilisant le même dock/adaptateur SATA ;
+    - un lecteur flash SanDisk Ultra USB 3.0 32 Go (clé USB).
+
+Tous les trois ont fonctionné correctement.
+
+J'ai également testé quelques cas d'utilisation réels:
+
+    - la navigation et l'affichage de photos JPEG relativement grandes stockées sur les disques durs SATA
+    - Lecture de fichiers MP3 à partir du disque dur SATA 3,5" à l'aide de mpg123 à partir de la ligne de commande
+    - Lecture de fichiers MP3 à l'aide d'Audacious
+
+Le chargement JPEG est réactif et la lecture MP3 est parfaitement fluide.
+
+Je n'ai rencontré aucune erreur ou déconnexion lors de ces tests.
+
+**Jusqu'à présent, tout ce que j'ai testé concernant le stockage externe et la lecture multimédia sur le VENTUNO Q a très bien fonctionné.** 
 
 ------------------------------------------------------------------------
 *D'autres notes sur la VENTUNO Q pourront être ajoutées à ce dépôt  au fil
