@@ -1807,8 +1807,8 @@ Pour le moment :
 
 J'ai testé:
 
-    - un disque dur SATA de 2,5 po à l'aide d'un dock/adaptateur SATA ;
-    - un disque dur SATA de 3,5 po (WD Caviar Blue 500 Go) utilisant le même dock/adaptateur SATA ;
+    - un disque dur SATA de 2,5" à l'aide d'un dock/adaptateur SATA ;
+    - un disque dur SATA de 3,5" (WD Caviar Blue 500 Go) utilisant le même dock/adaptateur SATA ;
     - un lecteur flash SanDisk Ultra USB 3.0 32 Go (clé USB).
 
 Tous les trois ont fonctionné correctement.
