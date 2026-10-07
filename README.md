@@ -2068,6 +2068,7 @@ Après nettoyage, mon répertoire contient donc :
 ```
 
 Le fichier `firefox.desktop` assure l'intégration de la version officielle Mozilla dans GNOME, tandis que `mimeinfo.cache` contient le cache des associations MIME.
+
 ------------------------------------------------------------------------
 *D'autres notes sur la VENTUNO Q pourront être ajoutées à ce dépôt  au fil
 des essais.*
