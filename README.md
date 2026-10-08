@@ -2069,6 +2069,196 @@ Après nettoyage, mon répertoire contient donc :
 
 Le fichier `firefox.desktop` assure l'intégration de la version officielle Mozilla dans GNOME, tandis que `mimeinfo.cache` contient le cache des associations MIME.
 
+# 08 octobre 2026 : VENTUNO Q + UNO Media Carrier — Enregistrement audio avec un microphone de casque
+
+## Objectif
+
+Vérifier la possibilité d'enregistrer de la voix sur la **VENTUNO Q (16 Go de RAM)** à l'aide de l'**UNO Media Carrier (ASX00083)** et d'un microphone intégré au câble d'un casque.
+
+Cet essai complète les précédents tests des sorties audio `Headphones`, `Line Out` et `Ear Out`.
+
+**Résultat : enregistrement audio fonctionnel.** ✅
+
+## 1. Configuration matérielle
+
+Matériel utilisé :
+
+- VENTUNO Q — 16 Go de RAM / 64 Go eMMC.
+- UNO Media Carrier — ASX00083.
+- Casque audio équipé d'un câble comportant un microphone et un bouton de commande.
+- Connecteur TRRS branché sur la prise `Headphones` de l'UNO Media Carrier.
+
+Le microphone est intégré au module de commande situé sur le câble du casque.
+
+Aucune interface audio USB supplémentaire n'est nécessaire pour cet essai.
+
+## 2. Identification du périphérique de capture
+
+Commande :
+
+```bash
+arecord -l
+```
+
+Résultat :
+
+```text
+**** Liste des périphériques matériels CAPTURE ****
+carte 0 : monacogertrude [monaco-gertrude], périphérique 1 : MultiMedia2 Capture (*) []
+  Sous-périphériques : 1/1
+  Sous-périphérique #0 : subdevice #0
+```
+
+Le périphérique de capture est donc :
+
+```text
+hw:0,1
+```
+
+- Carte `0` : `monaco-gertrude`.
+- Périphérique `1` : `MultiMedia2 Capture`.
+
+## 3. Commande d'enregistrement
+
+```bash
+arecord -D plughw:0,1 -d 20 -f S16_LE -r 48000 -vv recording.wav
+```
+
+Cette commande permet d'enregistrer **20 secondes de son au format WAV**, avec un affichage du niveau sonore pendant l'enregistrement.
+
+### Explication des paramètres
+
+| Paramètre | Description |
+|---|---|
+| `arecord` | Utilitaire ALSA permettant l'enregistrement audio en ligne de commande |
+| `-D plughw:0,1` | Sélectionne la carte audio 0 et le périphérique de capture 1 |
+| `-d 20` | Durée de l'enregistrement : 20 secondes |
+| `-f S16_LE` | Échantillons PCM signés sur 16 bits, little-endian |
+| `-r 48000` | Fréquence d'échantillonnage de 48 kHz |
+| `-vv` | Affichage détaillé avec indicateur du niveau d'enregistrement |
+| `recording.wav` | Nom du fichier WAV généré |
+
+L'interface `plughw` autorise, si nécessaire, des conversions de format par ALSA.
+
+Lors des diagnostics, le périphérique matériel indiquait les caractéristiques suivantes :
+
+```text
+Format   : S16_LE
+Channels : 1 (mono)
+Rate     : 48000 Hz
+```
+
+La commande utilise donc le format PCM natif observé sur ce périphérique.
+
+## 4. Lecture de l'enregistrement
+
+Après l'enregistrement :
+
+```bash
+aplay recording.wav
+```
+
+**Résultat : la voix enregistrée est correctement restituée.**
+
+## 5. Particularité du bouton du microphone
+
+Une difficulté a été rencontrée pendant les premiers essais.
+
+Le fichier WAV était correctement créé, mais aucun son n'était audible.
+
+L'indicateur de niveau affichait également :
+
+```text
+00%
+```
+
+La cause a finalement été identifiée : **le bouton situé sur le module microphone du casque était maintenu enfoncé pendant l'enregistrement.**
+
+Avec ce casque :
+
+- Bouton maintenu enfoncé : enregistrement silencieux.
+- Bouton relâché : enregistrement fonctionnel.
+
+Il s'agit d'une observation propre au casque utilisé, et non d'une règle générale concernant tous les microphones TRRS.
+
+## 6. Configuration ALSA — Informations complémentaires
+
+La configuration audio de la VENTUNO Q utilise la carte :
+
+```text
+monaco-gertrude
+```
+
+Le profil UCM correspondant au microphone analogique est défini dans :
+
+```text
+/usr/share/alsa/ucm2/Qualcomm/qcs8300/monaco-gertrude/HiFi.conf
+```
+
+La section concernée est :
+
+```text
+SectionDevice."AMIC12"
+```
+
+Elle définit notamment :
+
+```text
+CapturePCM "hw:${CardId},1"
+CaptureChannels 1
+```
+
+Et active plusieurs éléments du chemin audio :
+
+```text
+MIC1 Mux → IN12
+Headset Mic12 Switch → on
+Left ADC Mixer MIC1 Switch → on
+Right ADC Mixer MIC1 Switch → on
+MultiMedia2 Mixer PRIMARY_MI2S_TX → 1
+```
+
+Ces informations permettent de mieux comprendre le chemin de capture audio.
+
+Au cours des diagnostics, le réglage `MIC1` a également été examiné et modifié. Toutefois, les essais ne permettent pas d'affirmer qu'un réglage particulier du gain est indispensable au fonctionnement du microphone.
+
+Le problème de silence observé provenait du bouton du casque.
+
+## 7. Publication sur le forum Arduino
+
+Un premier essai d'enregistrement via la prise casque avait déjà été communiqué par **@ptillisch** dans la discussion :
+
+[VENTUNO Q Media Carrier — Waveshare 8 DSI Touch A — Display overlay needed](https://forum.arduino.cc/t/ventuno-q-media-carrier-waveshare-8-dsi-touch-a-display-overlay-needed/1460252)
+
+La commande utilisée dans cet essai était :
+
+```bash
+arecord --device="plughw:CARD=monacogertrude,DEV=1" --duration=5 --format S32_LE --rate=48000 recording.wav
+```
+
+Mon essai confirme cette possibilité d'enregistrement avec un microphone de casque TRRS, en utilisant le format `S16_LE` et l'option `-vv` pour visualiser le niveau sonore.
+
+Un retour d'expérience a également été publié dans la section VENTUNO Q du forum Arduino.
+
+## 8. Conclusion
+
+Les essais confirment que l'enregistrement audio fonctionne sur la **VENTUNO Q associée à l'UNO Media Carrier**, avec un microphone de casque connecté à la prise `Headphones`.
+
+Les points vérifiés sont :
+
+- Détection du périphérique de capture ALSA `hw:0,1`.
+- Enregistrement mono 16 bits / 48 kHz.
+- Création d'un fichier WAV.
+- Restitution de la voix enregistrée.
+- Affichage du niveau de capture avec `arecord -vv`.
+
+**Remarque :** à la date de ces essais, l'UNO Media Carrier n'est pas encore officiellement pris en charge sur VENTUNO Q. Ces résultats constituent donc un retour d'expérience sur une configuration matérielle précise, et non une garantie de compatibilité générale.
+
+---
+
+**Bilan : test positif — microphone de casque TRRS fonctionnel sur VENTUNO Q + UNO Media Carrier.**
+
+
 ------------------------------------------------------------------------
 *D'autres notes sur la VENTUNO Q pourront être ajoutées à ce dépôt  au fil
 des essais.*
