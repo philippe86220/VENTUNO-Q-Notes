@@ -2498,7 +2498,7 @@ Dans **Fichiers** : **Ctrl + L** → `/media/arduino/KINGSTON` → **Entrée** �
 | Retirer le SSD M.2 | **Éteindre et débrancher la VENTUNO Q après démontage** |
 | Sauvegarder des documents | Copier les `.md`, `.zip`, etc. dans `KINGSTON/sauv_ventuno_q` |
 
-**À retenir : après un redémarrage, il ne faut ni repartitionner ni reformater. Il suffit de monter le SSD s'il ne l'est pas déjà.**
+**À retenir : après un redémarrage, il suffit de monter le SSD s'il ne l'est pas déjà.**
 
 ------------------------------------------------------------------------
 *D'autres notes sur la VENTUNO Q pourront être ajoutées à ce dépôt  au fil
