@@ -2258,6 +2258,247 @@ Les points vérifiés sont :
 
 **Bilan : test positif — microphone de casque TRRS fonctionnel sur VENTUNO Q + UNO Media Carrier.**
 
+---
+
+# 13 octobre 2026 - VENTUNO Q — SSD Kingston NV3 500 Go : installation, accès et sauvegarde avec l'aide de ChatGPT
+
+> **Matériel :** Arduino VENTUNO Q (Ubuntu 24.04), SSD Kingston NV3 M.2 2230 500 Go, modèle `KINGSTON SNV3SM3500G`.  
+> **Objectif :** utiliser le SSD comme stockage de fichiers, notamment pour sauvegarder les documents `.md` et les applications Arduino App Lab exportées en `.zip`, puis éventuellement l'utiliser dans un boîtier USB sur d'autres ordinateurs.
+
+## 1. État final obtenu (13 octobre 2026)
+
+| Élément | Valeur |
+|---|---|
+| Disque SSD | `/dev/nvme0n1` |
+| Partition | `/dev/nvme0n1p1` |
+| Capacité | 500,11 Go (environ 465,8 Gio) |
+| Table de partitions | GPT |
+| Type de partition GPT | Microsoft basic data |
+| Système de fichiers | exFAT |
+| Étiquette | `KINGSTON` |
+| UUID du volume | `7EEE-73BC` |
+| Montage avec GNOME/udisks2 | `/media/arduino/KINGSTON` |
+| Système Ubuntu sur eMMC | `/dev/mmcblk0p71`, monté sur `/` |
+
+**Résultat :** détection, formatage, montage, lecture et écriture validés. Le fichier `test.txt` a été créé et relu avec succès. Un **signet KINGSTON** a été ajouté dans la barre latérale de GNOME Fichiers.
+
+**Attention :** le signet est un raccourci, **pas un montage automatique**. Le SSD peut nécessiter un nouveau montage après redémarrage.
+
+## 2. Après chaque redémarrage : retrouver le SSD dans Fichiers
+
+**C'est la procédure à réutiliser au quotidien. Ne pas refaire les étapes de partitionnement ou de formatage !**
+
+1. Ouvrir un terminal sur la VENTUNO Q.
+2. Si le SSD n'est pas accessible, exécuter **sans `sudo`** :
+
+   ```bash
+   udisksctl mount -b /dev/nvme0n1p1
+   ```
+
+3. Le résultat attendu ressemble à :
+
+   ```text
+   Mounted /dev/nvme0n1p1 at /media/arduino/KINGSTON
+   ```
+
+4. Ouvrir **Fichiers**, puis cliquer sur le signet **KINGSTON** dans la barre latérale.
+5. Si le signet a disparu : dans Fichiers, utiliser **Ctrl + L**, saisir `/media/arduino/KINGSTON`, valider, puis utiliser **Ctrl + D** pour recréer le signet.
+
+**Si le SSD est déjà monté**, inutile de relancer la commande : accéder directement au dossier dans Fichiers. Si la commande signale que le périphérique est déjà monté, ce n'est pas une demande de reformatage.
+
+Pour vérifier le montage et l'espace libre :
+
+```bash
+df -h /media/arduino/KINGSTON
+```
+
+**Si le SSD a été placé dans un boîtier USB**, son nom de périphérique peut changer (`/dev/sdX1` au lieu de `/dev/nvme0n1p1`). Vérifier avec `lsblk -f` avant d'utiliser une commande avec un nom de périphérique. Son UUID `7EEE-73BC` et son étiquette `KINGSTON` permettent de le reconnaître.
+
+## 3. Copier les sauvegardes
+
+Dans Fichiers, ouvrir le volume **KINGSTON** et créer un dossier `sauv_ventuno_q`.
+
+Organisation proposée :
+
+```text
+KINGSTON/
+└── sauv_ventuno_q/
+    ├── applications/
+    │   ├── application_wav_modulino.zip
+    │   └── autre_application.zip
+    ├── documentation/
+    │   ├── notes_ventuno.md
+    │   └── tests_materiel.md
+    └── divers/
+```
+
+Les noms des fichiers ci-dessus sont des exemples. Conserver les noms réels.
+
+- **Ctrl + clic** : sélectionner plusieurs fichiers non consécutifs.
+- **Maj + clic** : sélectionner une plage de fichiers.
+- **Ctrl + A** : tout sélectionner.
+- **Ctrl + C** : copier les fichiers sélectionnés.
+- **Ctrl + V** : coller dans `KINGSTON/sauv_ventuno_q`.
+
+**Privilégier la copie et non le déplacement (`Ctrl + X`)** pour conserver les originaux sur l'eMMC.
+
+Même pour les projets publiés sur GitHub, conserver les exports ZIP utiles : ils peuvent contenir des modifications locales non publiées. Vérifier les archives après copie.
+
+**Limite d'exFAT :** il est pratique pour Linux, macOS et Windows, mais ne préserve pas toutes les permissions, liens symboliques et métadonnées Linux. Pour archiver fidèlement un ensemble de fichiers Linux, créer une archive `.tar` avant de la copier sur le SSD. Une copie de fichiers ne constitue pas une image complète du système ni des partitions Qualcomm de l'eMMC.
+
+## 4. Avant de retirer le SSD ou de le placer dans le boîtier USB
+
+1. Terminer toutes les copies.
+2. Fermer les fichiers ouverts sur KINGSTON et les fenêtres de Fichiers qui l'utilisent.
+3. Exécuter **sans `sudo`** :
+
+   ```bash
+   udisksctl unmount -b /dev/nvme0n1p1
+   ```
+
+4. Vérifier que le démontage a réussi **avant toute coupure d'alimentation**.
+5. **Pour retirer physiquement le SSD M.2 de la VENTUNO Q : éteindre complètement la carte et débrancher son alimentation avant de manipuler le module. Ne jamais retirer un SSD M.2 interne sous tension.**
+
+Sur un autre ordinateur, utiliser la fonction **Éjecter / Démonter** avant de débrancher le boîtier USB.
+
+## 5. Manipulations initiales déjà effectuées — à ne PAS refaire
+
+Cette section est un **historique de l'installation initiale**, pas une procédure à répéter après un redémarrage. **Les commandes de partitionnement et de formatage peuvent détruire des données.**
+
+### 5.1 Détection du SSD
+
+```bash
+lsblk -o NAME,SIZE,TYPE,MODEL,FSTYPE,MOUNTPOINTS
+```
+
+Le disque `nvme0n1` est apparu avec le modèle `KINGSTON SNV3SM3500G`.
+
+Installation de l'outil de diagnostic :
+
+```bash
+sudo apt install nvme-cli
+```
+
+Identification :
+
+```bash
+sudo nvme list
+```
+
+État de santé :
+
+```bash
+sudo nvme smart-log /dev/nvme0n1
+```
+
+Résultats initiaux : aucune alerte critique, usure 0 %, réserve 100 %, aucune erreur média ni erreur du journal ; température relevée à **52 °C**. Un compteur `unsafe_shutdowns=1` a été observé, sans erreur média associée.
+
+### 5.2 Création de la partition GPT — déjà faite
+
+Contrôle initial :
+
+```bash
+sudo fdisk -l /dev/nvme0n1
+```
+
+Le SSD neuf ne contenait aucune table de partitions reconnue.
+
+Dans `sudo fdisk /dev/nvme0n1`, nous avons saisi successivement :
+
+| Saisie | Effet |
+|---|---|
+| `g` | Créer une table GPT en mémoire |
+| `n` | Créer une partition |
+| Entrée | Accepter le numéro 1 |
+| Entrée | Accepter le premier secteur proposé |
+| Entrée | Accepter le dernier secteur proposé, pour occuper tout le disque |
+| `t` puis `11` | Choisir le type « Microsoft basic data » |
+| `p` | Vérifier la table avant écriture |
+| `w` | Enregistrer la table GPT sur le SSD |
+
+La phrase « La table de partitions a été altérée » signifie simplement **qu'elle a été modifiée** : ce n'était pas une erreur.
+
+### 5.3 Formatage exFAT — déjà fait
+
+Installation :
+
+```bash
+sudo apt install exfatprogs
+```
+
+Commande de formatage utilisée **une seule fois sur la partition neuve** :
+
+```bash
+sudo mkfs.exfat -n KINGSTON /dev/nvme0n1p1
+```
+
+**Ne jamais relancer cette commande sur un SSD contenant des fichiers à conserver.**
+
+Contrôle :
+
+```bash
+lsblk -f /dev/nvme0n1
+```
+
+Résultat : `exfat`, étiquette `KINGSTON`, UUID `7EEE-73BC`.
+
+### 5.4 Premier montage manuel et test — historique
+
+Nous avions initialement créé un répertoire :
+
+```bash
+sudo mkdir -p /mnt/KINGSTON
+```
+
+Puis monté le SSD manuellement :
+
+```bash
+sudo mount -t exfat -o uid=$(id -u),gid=$(id -g),umask=022 /dev/nvme0n1p1 /mnt/KINGSTON
+```
+
+Vérification :
+
+```bash
+df -h /mnt/KINGSTON
+```
+
+Test d'écriture :
+
+```bash
+echo "Test SSD Kingston - VENTUNO Q" > /mnt/KINGSTON/test.txt
+```
+
+Le fichier a été lu avec succès dans Fichiers. Ce montage manuel dans `/mnt` n'affichait pas le SSD comme souhaité dans la barre latérale de GNOME.
+
+Après quelques tentatives de démontage indiquant « la cible est active », le démontage a finalement réussi :
+
+```bash
+sudo umount /mnt/KINGSTON
+```
+
+Nous avons alors monté le SSD par `udisks2`, sans `sudo` :
+
+```bash
+udisksctl mount -b /dev/nvme0n1p1
+```
+
+Résultat : `/media/arduino/KINGSTON`.
+
+Dans **Fichiers** : **Ctrl + L** → `/media/arduino/KINGSTON` → **Entrée** → **Ctrl + D** pour ajouter le signet KINGSTON. Le signet a été confirmé visuellement dans la barre latérale.
+
+## 6. Mémo rapide
+
+| Besoin | Action |
+|---|---|
+| Monter le SSD après redémarrage | `udisksctl mount -b /dev/nvme0n1p1` |
+| Ouvrir le SSD dans Fichiers | Signet **KINGSTON** ou **Ctrl + L** → `/media/arduino/KINGSTON` |
+| Vérifier la capacité disponible | `df -h /media/arduino/KINGSTON` |
+| Vérifier l'identité du disque | `lsblk -f` |
+| Démonter proprement | `udisksctl unmount -b /dev/nvme0n1p1` |
+| Retirer le SSD M.2 | **Éteindre et débrancher la VENTUNO Q après démontage** |
+| Sauvegarder des documents | Copier les `.md`, `.zip`, etc. dans `KINGSTON/sauv_ventuno_q` |
+
+**À retenir : après un redémarrage, il ne faut ni repartitionner ni reformater. Il suffit de monter le SSD s'il ne l'est pas déjà.**
 
 ------------------------------------------------------------------------
 *D'autres notes sur la VENTUNO Q pourront être ajoutées à ce dépôt  au fil
